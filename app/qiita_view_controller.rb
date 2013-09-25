@@ -1,49 +1,63 @@
 # -*- coding: utf-8 -*-
-class QiitaViewController < UIViewController
+class QiitaViewController < UITableViewController
   def viewDidLoad
     super
 
-    self.title = "Qiita"
+    @feed = nil
+    self.navigationItem.title = "Qiita RM Reader"
     self.view.backgroundColor = UIColor.whiteColor
 
-    @data = []
-    @feed = nil
+    url = "https://qiita.com/api/v1/tags/RubyMotion/items"
 
-    url = 'https://qiita.com/api/v1/tags/RubyMotion/items'
     BW::HTTP.get(url) do |response|
       if response.ok?
-        @feed = BW::JSON.parse(response.body.to_s)
-        @feed.each do |data|
-          @data << data["title"]
-          # p "======================================="
-          # p "タイトル: #{data["title"]}"
-          # p "更新日: #{data["updated_at_in_words"]}"
-          # p "ユーザ: #{data["user"]["url_name"]}"
-          # p "======================================="
-        end
+        @feed = BW::JSON.parse(response.body.to_str)
+        view.reloadData
       else
         App.alert(response.error_message)
       end
-
-      @table = UITableView.alloc.initWithFrame(self.view.bounds)
-      @table.dataSource = self
-
-      self.view.addSubview @table
     end
   end
 
   def tableView(tableView, numberOfRowsInSection:section)
-    @data.count
+    if @feed.nil?
+      return 0
+    else
+      @feed.size
+    end
+  end
+
+  def tableView(tableView, heightForRowAtIndexPath:indexPath)
+    60
   end
 
   def tableView(tableView, cellForRowAtIndexPath:indexPath)
-    @reuseIdentifier ||= "CELL_IDENTIFIER"
+    cell = tableView.dequeueReusableCellWithIdentifier('cell') || UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier:'cell')
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator
 
-    cell = tableView.dequeueReusableCellWithIdentifier(@reuseIdentifier) || begin
-      UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier:@reuseIdentifier)
+    label = UILabel.alloc.init
+    label.frame = CGRectMake(5, 40, 200, 30)
+    label.font = UIFont.fontWithName("AppleGothic",size:14)
+    label.text = @feed[indexPath.row]["title"]
+    label.textAlignment = UITextAlignmentCenter
+    cell.addSubview(label)
+
+
+
+    image_path = @feed[indexPath.row]["user"]["profile_image_url"]
+
+    image_src = NSData.dataWithContentsOfURL(NSURL.URLWithString(image_path))
+    image = UIImage.imageWithData(image_src)
+
+    image_view = UIImageView.alloc.initWithImage(image)
+    image_view.frame = CGRectMake(5, 5, 30, 30)
+    cell.addSubview(image_view)
+    return cell
+  end
+  def tableView(tableView, didSelectRowAtIndexPath:indexPath)
+    WebViewController.new.tap do |c|
+      c.item = @feed[indexPath.row]
+      self.navigationController.pushViewController(c, animated:true)
     end
-    cell.textLabel.text = @data[indexPath.row]
-
-    cell
   end
 end
