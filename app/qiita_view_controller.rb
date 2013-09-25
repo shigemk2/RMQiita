@@ -28,7 +28,7 @@ class QiitaViewController < UITableViewController
   end
 
   def tableView(tableView, heightForRowAtIndexPath:indexPath)
-    60
+    40
   end
 
   def tableView(tableView, cellForRowAtIndexPath:indexPath)
@@ -36,10 +36,10 @@ class QiitaViewController < UITableViewController
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator
 
     label = UILabel.alloc.init
-    label.frame = CGRectMake(5, 40, 200, 30)
+    label.frame = CGRectMake(40, 20, 200, 30)
     label.font = UIFont.fontWithName("AppleGothic",size:14)
     label.text = @feed[indexPath.row]["title"]
-    label.textAlignment = UITextAlignmentCenter
+    label.textAlignment = UITextAlignmentLeft
     cell.addSubview(label)
 
 
